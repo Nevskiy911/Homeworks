@@ -1,14 +1,16 @@
 import os
 import re
+import sys
 from pathlib import Path
 
-new_dir_dct = {"images": [".jpg", ".jpeg", ".png", ".svg"], "documents": [".txt", ".doc", ".docx", ".xlsx", ".pptx" ".pdf"], "audio": [".mp3", ".ogg", ".wav", ".amr"], "video": [".avi", ".mp4", ".mov", ".mkv"], "archives": [
-    ".zip", ".gz", ".tar"], "unknown": []}
+new_dir_dct = {"images": [".jpg", ".jpeg", ".png", ".svg"], "documents": [".txt", ".doc", ".docx", ".xlsx", ".pptx", ".pdf"], "audio": [
+    ".mp3", ".ogg", ".wav", ".amr"], "video": [".avi", ".mp4", ".mov", ".mkv"], "archives": [".zip", ".gz", ".tar"], "unknown": []}
+
 
 def normalize(name: str) -> str:
     CYRILLIC_SYMBOLS = "абвгдеёжзийклмнопрстуфхцчшщъыьэюяєіїґ"
     TRANSLATION = ("a", "b", "v", "g", "d", "e", "e", "j", "z", "i", "j", "k", "l", "m", "n", "o", "p", "r", "s", "t", "u", "f", "h", "ts", "ch", "sh", "sch", "", "y", "", "e", "yu", "ya", "je", "i", "ji", "g")
-    
+
     TRANS = {}
     for c, l in zip(list(CYRILLIC_SYMBOLS), TRANSLATION):
         TRANS[ord(c)] = l
@@ -40,28 +42,27 @@ def sort_func(path_dir):
                         p_file.rename(dir_img.joinpath(
                             f'{p_file.name.split(".")[0]}_c{p_file.suffix}'))
                         print(f"Мaybe a duplicate: {p_file.name}")
+                elif p_file.suffix.lower() in new_dir_dct[suff]:
+                    unknown_suff = "unknown"
+                    dir_img = cur_dir / unknown_suff
+                    dir_img.mkdir(exist_ok=True)
+                    try:
+                        p_file.rename(dir_img.joinpath(p_file.name))
+                    except FileExistsError:
+                        p_file.rename(dir_img.joinpath(
+                            f'{p_file.name.split(".")[0]}_c{p_file.suffix}'))
+                        print(f"Мaybe a duplicate: {p_file.name}")
 
     for dir_p in reversed(dir_path):
         if os.path.split(dir_p)[1] in new_dir_dct or os.stat(dir_p).st_size != 0:
             continue
         else:
-            os.rmdir(dir_p)
-                # elif p_file.suffix.lower() not in new_dir_dct[suff]:
-                #     dir_img = cur_dir / new_dir_dct["unknown"]
-                #     dir_img.mkdir(exist_ok=True)
-                #     try:
-                #         p_file.rename(dir_img.joinpath(p_file.name))
-                #     except FileExistsError:
-                #         p_file.rename(dir_img.joinpath(
-                #             f'{p_file.name.split(".")[0]}_c{p_file.suffix}'))
-                #         print(f"Мaybe a duplicate: {p_file.name}")
+            try:
+                os.rmdir(dir_p)
+            except OSError:
+                print("System file")
+
 
 if __name__ == "__main__":
-    path_d = input('>>> Enter your way to the directory: ')
-    if not Path(path_d).exists():
-        print('!!! The directory not found')
-    else:
-        sort_func(path_d)
-    print('OK. Process has been finished!')
-
-
+    path_dir = sys.argv[1]
+    sort_func(path_dir)
