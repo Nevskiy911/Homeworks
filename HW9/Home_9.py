@@ -21,7 +21,8 @@ def hello(*args):
 @input_error
 def help(*args):
     for key, values in COMMANDS.items():
-        print(f"Command: {values}")
+        print (f"Command: {key}")
+    return hello()
 
 @input_error
 def add(*args):
@@ -49,7 +50,7 @@ def show_all(*args):
 def phone(*args):
     for k, v in phone_book.items():
         if v in args:
-            print(f"{k}: {v}")
+            return f"{k}: {v}"
 
 def exit(*args):
     return "Good bye!"
@@ -60,6 +61,7 @@ def no_command(*args):
 
 COMMANDS = {"help": help,
             "add": add,
+            "change": change,
             "show all": show_all,
             "phone": phone,
             "hello": hello,
