@@ -17,21 +17,19 @@ class Phone(Field):
     pass
 
 
-class Record(Field):
-
-    def __init__(self, name: Name, phone: Phone = None):
+class Record:
+    def __init__(self, name):
         self.name = name
         self.phones = []
 
     def add_num(self, phone):
         self.phones.append(phone)
 
-    def change_num(self, phone):
-        self.phones.append(phone)
+    def change_num(self, position, phone):
+        self.phones[position] = phone
 
 
 class AddressBook(UserDict):
-
     def add_record(self, record):
         name = record.name.value
         self.data[name] = record
@@ -66,23 +64,23 @@ def help(*args):
 
 @input_error
 def add(*args):
-    data = args[0].split(" ")
+    data = args[0].split()
     name = Name(data[0])
     phone = Phone(data[1])
     rec = Record(name)
     rec.add_num(phone)
     phone_book.add_record(rec)
 
-    return f"{name} phones list has added with {phone} number"
+    return f"{name.value} phones list has added with {phone.value} number"
 
 
 @input_error
 def change(*args):
-    data = args[0].split(" ")
+    data = args[0].split()
     name = Name(data[0])
     phone = Phone(data[1])
-    rec = Record(name)
-    rec.change_num(phone)
+    rec = phone_book[name.value]
+    rec.change_num(0, phone)
 
     return f"{name} number has been changed for number: {phone}"
 
@@ -94,14 +92,14 @@ def show_all(*args):
     for k, v in phone_book.data.items():
         rec = phone_book.data[k]
         phones_lst.append(f"{k}: {', '.join(str(num) for num in rec.phones)}")
-    return "\n".join([f"{pos}" for pos in phones_lst])
+    return "\n".join([f"{item}" for item in phones_lst])
 
 
 @input_error
 def phone(*args):
     name = args[0]
     if name in phone_book.data:
-        for k, v in phone_book.items():
+        for k, v in phone_book.data.items():
             rec = phone_book.data[k]
             if name == k:
                 return f"{k}: {', '.join(str(num) for num in rec.phones)}"
@@ -132,7 +130,7 @@ def command_handler(text):
     for command, kword in COMMANDS.items():
         if text.startswith(command):
             return kword, text.replace(command, "").strip()
-    return no_command, None
+    return no_command, phone_book
 
 
 def main():
