@@ -32,7 +32,7 @@ class Birthday:
         try:
             self.__birthday = datetime.strptime(birthday, '%Y-%m-%d').date()
         except ValueError as e:
-            return "The data format should be like this: <<< dd.mm.yy >>>"
+            return "The data format should be like this: <<< yyyy-mm-dd >>>"
 
     def __repr__(self) -> str:
         return self.birthday.strftime('%Y-%m-%d')
@@ -40,17 +40,16 @@ class Birthday:
 
 
 class Record:
-    def __init__(self, name, birthday: Birthday = None):
+    def __init__(self, name, birthday: Birthday=None):
         self.name = name
         self.phones = []
         self.birthday = birthday
-        self.birthdays = []
 
     def add_num(self, phone):
         self.phones.append(phone)
 
     def add_birth(self, birth: Birthday):
-        self.birthdays.append(birth) 
+        self.birthday = birth
 
     def change_num(self, position, phone):
         self.phones[position] = phone
@@ -97,7 +96,6 @@ class CustomIterator:
 
 phone_book = AddressBook()
 
-
 def input_error(func):
     def inner(*args):
         try:
@@ -142,7 +140,7 @@ def add(*args):
     data = args[0].split()
     name = Name(data[0])
     phone = Phone(data[1])
-    rec = Record(name)
+    rec = Record(name, birthday=None)
     rec.add_num(phone)
     phone_book.add_record(rec)
 
