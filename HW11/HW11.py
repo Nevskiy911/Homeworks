@@ -19,43 +19,42 @@ class Phone(Field):
 
 
 class Birthday(Field):
-    def __init__(self, birthday):
-        self._value = birthday
+    def __init__(self, value):
+        self.__value = None
+        self.value = value
 
     def __str__(self):
-        return datetime.strftime(self._value(), "%Y.%m.%d")
+        return self.__value.strftime("%Y.%m.%d")
 
     @property
     def value(self):
-        return self._value
+        return self.__value
 
     @value.setter
-    def value(self):
+    def value(self, value):
         try:
-            self._value = datetime.strptime(birthday, '%Y.%m.%d').date()
+            self.__value = datetime.strptime(value, '%Y.%m.%d').date()
         except ValueError as e:
             return "The data format should be like this: <<< yyyy.mm.dd >>>"
 
     def __repr__(self) -> str:
-        return self.value.strftime('%Y.%m.%d')
+        return self.__value.strftime('%Y.%m.%d')
 
 
 class Record:
     # phones = []
-    birthday = None
+    # birthday = None
 
-    def __init__(self, name):
+    def __init__(self, name, phone=None, birthday=None):
         self.name = name
-        self.phones = []
-        # self.birthday = None
+        self.phones = [phone] if phone else []
+        self.birthday = birthday
 
     def add_num(self, phone):
         self.phones.append(phone)
 
-    def add_birth(self):
-        if self.birthday.value:
-            return True
-        return False
+    def add_birth(self, value: Birthday):
+        self.birthday = value
 
     def change_num(self, position, phone):
         self.phones[position] = phone
@@ -63,12 +62,11 @@ class Record:
     def days_to_birthday(self):
         if self.birthday:
             birth = self.birthday.value
-            result = datetime(birth.year, birth.month,
-                              birth.day) - datetime.now()
+            result = birth.replace(year=datetime.now().year) - datetime.now().date()
             if result.days > 0:
-                return result.days
+                return f"To birthday {self.name} {result.days} days"
             return "Birthday has already passed"
-        return "Birthday not found"
+        return "Birthday not set"
 
 
 class AddressBook(UserDict):
@@ -147,10 +145,12 @@ def help(*args):
 def add_birthday(*args):
     data = args[0].split()
     name = Name(data[0])
-    birthday = data[1]
-    rec = Record(phone_book.data.get(name))
-    rec.add_birth = birthday
-    return f"{name.value} birthday has added with {birthday} day"
+    birthday = Birthday(data[1])
+    rec = phone_book.data.get(name.value)
+    if rec:
+        rec.add_birth(birthday)
+        return f"{name.value} birthday has added with {birthday} day"
+    return f"No contact wit name {name}"
 
 
 @input_error
@@ -160,8 +160,8 @@ def add(*args):
     phone = Phone(data[1])
     rec = Record(name)
     rec.add_num(phone)
-    birthday = Birthday(None)
-    rec.birthday = birthday
+    # birthday = Birthday(None)
+    # rec.birthday = birthday
     phone_book.add_record(rec)
 
     return f"{name.value} phones list has added with {phone.value} number"
@@ -201,14 +201,15 @@ def phone(*args):
 
 def birthday(*args):
     name = args[0]
-    rec = Record(phone_book.data.get(name))
-    # if rec:
-    #     return rec.days_to_birthday()
-    birth = rec.add_birth
-    if birth:
-        days = int(rec.days_to_birthday())
-        return f"You must be waiting {days} days to this birthday"
-    return f'There is no birthday in the phonebook with name {args[0]}'
+    rec = phone_book.data.get(name)
+    if rec:
+         return rec.days_to_birthday()
+    # birth = rec.add_birth
+    # if birth:
+    #     days = int(rec.days_to_birthday())
+    #     return f"You must be waiting {days} days to this birthday"
+    # return f'There is no birthday in the phonebook with name {args[0]}'
+    return f"No contact wit name {name}"
 
 
 def exit(*args):
