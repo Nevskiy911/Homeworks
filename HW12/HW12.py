@@ -230,12 +230,11 @@ def main():
         command, data = command_handler(user_input)
         print(command(data))
 
-        with open('data.bin', 'wb') as f:
+        with open('data.bin', 'ab') as f:
             bytes = pickle.dump(phone_book, f)
-            print(bytes)
+
         with open('data.bin', 'rb') as f:
             data = pickle.load(f)
-            print(data)
 
         if user_input in ["exit", "close", "good bye"]:
             break
