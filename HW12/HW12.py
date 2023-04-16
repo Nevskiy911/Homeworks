@@ -1,9 +1,6 @@
 from collections import UserDict
-# import json
-import csv
-import pickle
 from datetime import datetime
-
+import pickle
 
 class Field:
     def __init__(self, value=None):
@@ -51,16 +48,6 @@ class Record:
         self.name = name
         self.phones = [phone] if phone else []
         self.birthday = birthday
-
-
-    def save_to_file(self):
-        with open("data.bin", 'wb') as f:
-            pickle.dump(self, f)
-
-    @staticmethod
-    def load_from_file(file_name):
-        with open(file_name, 'rb') as f:
-            return pickle.load(f)
 
     def add_num(self, phone):
         self.phones.append(phone)
@@ -243,19 +230,15 @@ def main():
         command, data = command_handler(user_input)
         print(command(data))
 
-        with open("data.csv", "w", newline='') as f:
-            writer = csv.writer(f, delimiter='\t')
-            for k, v in phone_book.data.items():
-                writer.writerow([k, v])
-
-        with open("data.csv") as f:
-            reader = csv.reader(f, delimiter='\t')
-            for line in reader:
-                print(line)
+        with open('data.bin', 'wb') as f:
+            bytes = pickle.dump(phone_book, f)
+            print(bytes)
+        with open('data.bin', 'rb') as f:
+            data = pickle.load(f)
+            print(data)
 
         if user_input in ["exit", "close", "good bye"]:
             break
-
 
 if __name__ == "__main__":
     main()
