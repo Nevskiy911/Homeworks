@@ -2,6 +2,24 @@ from collections import UserDict
 from datetime import datetime
 import pickle
 
+
+def input_error(func):
+    def inner(*args):
+        try:
+            return func(*args)
+        except IndexError:
+            return "Not enough params. Try again"
+        except KeyError:
+            return "Not enough user name or phone number. Try again"
+        except ValueError:
+            return "Not enough user name or phone number. Try again"
+        except TypeError:
+            return "Incorrect data type"
+        except AttributeError:
+            return "Incorrect attribute"
+    return inner
+
+
 class Field:
     def __init__(self, value=None):
         self.value = value
@@ -71,6 +89,34 @@ class Record:
 class AddressBook(UserDict):
     counter = 2
 
+    def __init__(self):
+        super().__init__()
+        self.serial()
+
+
+    def serial(self):
+        with open("data.bin", "rb") as fh:
+            data = pickle.load(fh)
+            for name, record in data.items():
+
+                name = Name(name)
+                rec = Record(name)
+                rec.phones = [Phone(phone) for phone in record["phones"]]
+                birthday = datetime.strptime(record["birthday"], '%Y.%m.%d').date() if record["birthday"] else None
+                rec.birthday = Birthday(birthday)
+                self.add_record(rec)
+
+    def save_data(self):
+        for k, v in phone_book.data.items():
+            rec = phone_book.data[k]
+            print(f"{k}: {', '.join(str(num) for num in rec.phones)}")
+            print(rec.birthday)
+            with open("data.bin", "ab") as fh:
+                data = {k: {"phones":[', '.join(str(num)
+                                      for num in rec.phones)],"birthday": rec.birthday}}
+                pickle.dump(data, fh)
+
+
     def records(self, contact):
         self.counter = contact
 
@@ -104,23 +150,6 @@ class CustomIterator:
 phone_book = AddressBook()
 
 
-def input_error(func):
-    def inner(*args):
-        try:
-            return func(*args)
-        except IndexError:
-            return "Not enough params. Try again"
-        except KeyError:
-            return "Not enough user name or phone number. Try again"
-        except ValueError:
-            return "Not enough user name or phone number. Try again"
-        except TypeError:
-            return "Incorrect data type"
-        except AttributeError:
-            return "Incorrect attribute"
-    return inner
-
-
 def hello(*args):
     return """How can I help you?"""
 
@@ -140,6 +169,7 @@ def add_birthday(*args):
     rec = phone_book.data.get(name.value)
     if rec:
         rec.add_birth(birthday)
+        phone_book.save_data()
         return f"{name.value} birthday has added with {birthday} day"
     return f"No contact wit name {name}"
 
@@ -151,7 +181,7 @@ def add(*args):
     rec = Record(name)
     rec.add_num(phone)
     phone_book.add_record(rec)
-
+    phone_book.save_data()
     return f"{name.value} phones list has added with {phone.value} number"
 
 
@@ -162,7 +192,7 @@ def change(*args):
     phone = Phone(data[1])
     rec = phone_book[name.value]
     rec.change_num(name, phone)
-
+    phone_book.save_data()
     return f"{name} number has been changed for number: {phone}"
 
 
@@ -226,15 +256,10 @@ def command_handler(text):
 def main():
     print(hello())
     while True:
+
         user_input = input(">>> ")
         command, data = command_handler(user_input)
         print(command(data))
-
-        with open('data.bin', 'ab') as f:
-            bytes = pickle.dump(phone_book, f)
-
-        with open('data.bin', 'rb') as f:
-            data = pickle.load(f)
 
         if user_input in ["exit", "close", "good bye"]:
             break
