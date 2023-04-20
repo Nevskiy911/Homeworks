@@ -1,5 +1,6 @@
 from collections import UserDict
 from datetime import datetime
+import os
 import pickle
 
 
@@ -91,30 +92,15 @@ class AddressBook(UserDict):
 
     def __init__(self):
         super().__init__()
-        self.serial()
 
-
-    def serial(self):
-        with open("data.bin", "rb") as fh:
-            data = pickle.load(fh)
-            for name, record in data.items():
-
-                name = Name(name)
-                rec = Record(name)
-                rec.phones = [Phone(phone) for phone in record["phones"]]
-                birthday = datetime.strptime(record["birthday"], '%Y.%m.%d').date() if record["birthday"] else None
-                rec.birthday = Birthday(birthday)
-                self.add_record(rec)
+    def load_data(self):
+        if os.path.exists("data.bin"):
+            with open("data.bin", "rb") as file:
+                self.data = pickle.load(file)
 
     def save_data(self):
-        for k, v in phone_book.data.items():
-            rec = phone_book.data[k]
-            print(f"{k}: {', '.join(str(num) for num in rec.phones)}")
-            print(rec.birthday)
-            with open("data.bin", "ab") as fh:
-                data = {k: {"phones":[', '.join(str(num)
-                                      for num in rec.phones)],"birthday": rec.birthday}}
-                pickle.dump(data, fh)
+        with open("data.bin", "wb") as file:
+            pickle.dump(self.data, file)
 
 
     def records(self, contact):
@@ -178,6 +164,11 @@ def add(*args):
     data = args[0].split()
     name = Name(data[0])
     phone = Phone(data[1])
+    rec = phone_book.get(str(name))
+    if rec:
+        rec.add_num(phone)
+        phone_book.save_data()
+        return f"{name.value} phones list has added with {phone.value} number"
     rec = Record(name)
     rec.add_num(phone)
     phone_book.add_record(rec)
@@ -200,9 +191,9 @@ def show_all(*args):
     phones_lst = []
     if len(phone_book.data) == 0:
         return "There are no contacts in the phone book yet!"
-    for k, v in phone_book.data.items():
-        rec = phone_book.data[k]
-        phones_lst.append(f"{k}: {', '.join(str(num) for num in rec.phones)}")
+    for k, rec in phone_book.data.items():
+        phones_lst.append("{}:{} {}".format(
+            k, ', '.join([str(num) for num in rec.phones]), rec.birthday if rec.birthday else ''))
     return "\n".join([f"{item}" for item in phones_lst])
 
 
@@ -255,6 +246,7 @@ def command_handler(text):
 
 def main():
     print(hello())
+    phone_book.load_data()
     while True:
 
         user_input = input(">>> ")
@@ -262,6 +254,7 @@ def main():
         print(command(data))
 
         if user_input in ["exit", "close", "good bye"]:
+            phone_book.save_data()
             break
 
 if __name__ == "__main__":
